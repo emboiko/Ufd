@@ -1,6 +1,7 @@
 # Universal File Dialog
 
 Import:
+
 `from Ufd import Ufd`
 
 Construct:
@@ -14,8 +15,11 @@ tree_xscroll=True
 result = ufd()
 ```
 Or
+
 `ufd = Ufd(0,1,0)`
+
 Or
+
 `ufd = Ufd()`
 
 Ufd still has several [boolean constructor parameters] options & behavioral tweaks in development that will optionally restrict / expand upon its behavior to match the context in which it is used. 
