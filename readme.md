@@ -6,7 +6,7 @@ Import:
 
 Construct:
 ```
-dialog = Ufd(**Kwargs)`
+dialog = Ufd(**Kwargs)
 result = dialog()
 ```
 
