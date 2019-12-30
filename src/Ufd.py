@@ -21,6 +21,7 @@ class Ufd:
         Unopinionated, minimalist, reusable, slightly configurable,
         general-purpose file-dialog.
     """
+
     def __init__(
         self,
         show_hidden_files=False,
@@ -28,6 +29,7 @@ class Ufd:
         tree_xscroll=False,
         multiselect=True,
     ):
+
         """
             Displays the Add Items dialog and doesn't allow any additional
             instances of itself to be created while it's showing.
@@ -68,6 +70,7 @@ class Ufd:
         """
             Display dialog & return selection
         """
+
         self.dialog=Toplevel()
         self.dialog.grab_set()
         self.dialog.geometry("500x300")
@@ -75,6 +78,7 @@ class Ufd:
         self.dialog.update()
         (width_offset, height_offset)=get_offset(self.dialog)
         self.dialog.geometry(f"+{width_offset}+{height_offset}")
+        self.dialog.update()
 
         self.dialog.title("Universal File Dialog")
         self.dialog.iconbitmap(f"{dirname(__file__)}/img/main_icon.ico")
