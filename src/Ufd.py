@@ -74,9 +74,9 @@ class Ufd:
         else:
             self.select_files = False
 
-        self.file_icon=PhotoImage(file=f"{dirname(__file__)}/img/file.gif").subsample(50)
-        self.folder_icon=PhotoImage(file=f"{dirname(__file__)}/img/folder.gif").subsample(15)
-        self.disk_icon=PhotoImage(file=f"{dirname(__file__)}/img/disk.gif").subsample(15)
+        self.file_icon=PhotoImage(file=f"{dirname(__file__)}/file.gif").subsample(50)
+        self.folder_icon=PhotoImage(file=f"{dirname(__file__)}/folder.gif").subsample(15)
+        self.disk_icon=PhotoImage(file=f"{dirname(__file__)}/disk.gif").subsample(15)
 
 
     def __call__(self):
@@ -94,7 +94,7 @@ class Ufd:
         self.dialog.update()
 
         self.dialog.title("Universal File Dialog")
-        self.dialog.iconbitmap(f"{dirname(__file__)}/img/main_icon.ico")
+        self.dialog.iconbitmap(f"{dirname(__file__)}/main_icon.ico")
 
         # Tkinter x_scroll is broken for treeview
         # https://stackoverflow.com/questions/49715456
