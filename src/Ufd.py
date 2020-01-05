@@ -17,8 +17,9 @@ from utils import get_disks, flip_slashes, get_offset
 #MVC refactor / better data structures
 #Search feature
 #Make Directory
-#UI can be made more user friendly with a submit button
+#UI can be made more user friendly with a submit button rather than <Return>
 #Better path delimeter handling + delimiter kwarg
+#Linux / Mac support
 
 #Cancel/close-dialog bug: almost always returns something when cancelled
 #A wm protocol will solve this
@@ -42,11 +43,7 @@ class Ufd:
     ):
 
         """
-            Displays the Add Items dialog and doesn't allow any additional
-            instances of itself to be created while it's showing.
-
-            Add items is a minimalist filedialog comprised of a tkinter
-            treeview and listbox, both with some bindings attatched.
+            Init kwargs as object attributes + save references to TK.PhotoImages
         """
 
         root = Tk()
@@ -164,15 +161,25 @@ class Ufd:
 
 
     def __str__(self):
+        """
+            Return address
+        """
+
         return "Universal File Dialog"\
         f" @ {hex(id(self))}"
 
 
     def __repr__(self):
+        """
+            Return full string representation of constructor call
+        """
+
         return f"Ufd(show_hidden_files={self.show_hidden_files},"\
         f" include_files={self.include_files},"\
         f" tree_xscroll={self.tree_xscroll},"\
-        f" multiselect={self.multiselect})"\
+        f" multiselect={self.multiselect},"\
+        f" select_dirs={self.select_dirs},"\
+        f" select_files={self.select_files})"\
         f" @ {hex(id(self))}"
 
 
@@ -201,13 +208,8 @@ class Ufd:
 
     def list_dir(self, full_path, force):
         """
-            Reads a directory with a system call to dir, 
+            Reads a directory with a shell call to dir, 
             returning contents based on the boolean FORCE
-
-            This function spawns a child process which 
-            then sends 'dir' or 'dir PATH /b /a', similar to 'dir -force'. 
-            Python parses the output, parses it a little more with a 
-            regular expression, and returns it.
         """
 
         full_path=flip_slashes(full_path, "back")
@@ -248,8 +250,7 @@ class Ufd:
             Dynamically populates & updates the treeview and listbox
 
             Spaces in paths act as a delimeter for the values array to split on.
-            tree_item_name is just the result of building the pathname back together,
-            and could also be done by overwriting the same variable. 
+            tree_item_name is just the result of building the pathname back together.
 
             The treeview is populated with the data for the full path, 
             and the file or directory name is displayed as text + an icon.

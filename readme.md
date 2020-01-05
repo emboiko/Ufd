@@ -48,9 +48,9 @@ def __init__(
 Ufd still has several [boolean constructor parameters] options & behavioral tweaks in development that will optionally restrict / expand upon its behavior to match the context in which it is used. 
 
 ## Why should I use Ufd?
-- No dependencies
 - It's easy
-- Ufd doesn't care what kind of dialog it's serving as. 
+- No external dependencies
+- Ufd doesn't care what kind of dialog it's serving as. You get to deal with any ambiguities in your own way. 
 
 Want to select 3 directories and 2 files from the same dialog, and have their paths returned as a list? 
 
@@ -59,6 +59,15 @@ dialog = Ufd()
 result = dialog()
 >> result
 >> ["C:some_dir/dir1", "C:some_dir/dir2", "C:some_dir/dir3", "C:some_dir/file1.ext", "C:some_dir/file2.ext"]
+```
+
+Or if you'd prefer to corral the user into selecting a single file:
+
+```
+dialog = Ufd(multiselect=False, select_dirs=False)
+result = dialog()
+>> result
+>> ["C:some_dir/file1.ext"]
 ```
 
 
