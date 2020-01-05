@@ -313,11 +313,9 @@ class Ufd:
                 for item in items:
                     full_path=join(tree_item_name, item)
                     if self.select_dirs and isdir(full_path):
-                        print(f"dir {full_path}")
                         self.file_list.insert("end", full_path)
                     else:
                         if self.select_files and (not isdir(full_path)):
-                            print(f"file {full_path}")
                             self.file_list.insert("end", full_path)
             else:
                 self.file_list.insert("end", tree_item_name)
