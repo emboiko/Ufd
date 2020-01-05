@@ -7,12 +7,21 @@ from tkinter import (
     messagebox
 )
 from tkinter.ttk import Treeview
-from os.path import isdir, dirname
+from os.path import isdir, dirname, exists
 from posixpath import join
 from re import split as re_split
 from subprocess import run
 from utils import get_disks, flip_slashes, get_offset
 
+#Todo:
+#MVC refactor / better data structures
+#Search feature
+#Make Directory
+#UI can be made more user friendly with a submit button
+#Better path delimeter handling + delimiter kwarg
+
+#Cancel/close-dialog bug: almost always returns something when cancelled
+#A wm protocol will solve this
 
 class Ufd:
     """
@@ -28,6 +37,8 @@ class Ufd:
         include_files=False,
         tree_xscroll=False,
         multiselect=True,
+        select_dirs=True,
+        select_files=True,
     ):
 
         """
@@ -45,21 +56,26 @@ class Ufd:
             self.show_hidden_files = True
         else:
             self.show_hidden_files = False
-
         if include_files:
             self.include_files = True
         else:
             self.include_files = False
-
         if tree_xscroll:
             self.tree_xscroll = True
         else:
             self.tree_xscroll = False
-
         if multiselect:
             self.multiselect = True
         else:
             self.multiselect = False
+        if select_dirs:
+            self.select_dirs = True
+        else:
+            self.select_dirs = False
+        if select_files:
+            self.select_files = True
+        else:
+            self.select_files = False
 
         self.file_icon=PhotoImage(file=f"{dirname(__file__)}/img/file.gif").subsample(50)
         self.folder_icon=PhotoImage(file=f"{dirname(__file__)}/img/folder.gif").subsample(15)
@@ -229,7 +245,7 @@ class Ufd:
 
     def dialog_populate(self, event=None):
         """
-            Dynamically populates & updates the treeview and listbox in Add Items
+            Dynamically populates & updates the treeview and listbox
 
             Spaces in paths act as a delimeter for the values array to split on.
             tree_item_name is just the result of building the pathname back together,
@@ -261,10 +277,7 @@ class Ufd:
                     items=self.list_dir(tree_item_name, force=False)
                     
             except Exception as err:
-                messagebox.showerror(
-                "Error.",
-                err
-                )
+                messagebox.showerror("Error.", err)
 
                 items=[]
                 error=True
@@ -298,7 +311,13 @@ class Ufd:
             if isdir(tree_item_name):
                 for item in items:
                     full_path=join(tree_item_name, item)
-                    self.file_list.insert("end", full_path)
+                    if self.select_dirs and isdir(full_path):
+                        print(f"dir {full_path}")
+                        self.file_list.insert("end", full_path)
+                    else:
+                        if self.select_files and (not isdir(full_path)):
+                            print(f"file {full_path}")
+                            self.file_list.insert("end", full_path)
             else:
                 self.file_list.insert("end", tree_item_name)
 
