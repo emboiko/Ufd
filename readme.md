@@ -10,6 +10,8 @@ dialog = Ufd(**Kwargs)
 result = dialog()
 ```
 
+or
+
 ```
 dialog = Ufd(
 show_hidden_files=True,
@@ -17,9 +19,10 @@ include_files=True,
 tree_xscroll=True,
 multiselect=False
 )
+result = dialog()
 ```
 
-Ufd's actual constructor looks like this:
+Ufd's full constructor looks like this:
 
 ```
 def __init__(
