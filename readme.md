@@ -22,7 +22,7 @@ multiselect=False
 result = dialog()
 ```
 
-Ufd's full constructor looks like this:
+Ufd's full constructor signature looks like this:
 
 ```
 def __init__(
