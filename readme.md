@@ -36,18 +36,19 @@ def __init__(
     select_files=True,
 ):
 ```
+`title`             : str: Window title
 
-`show_hidden_files` : Include hidden file(s) or folder(s) in treeview
+`show_hidden_files` : bool: Include hidden file(s) or folder(s) in treeview
 
-`include_files`     : Include file(s) in treeview
+`include_files`     : bool: Include file(s) in treeview
 
-`tree_xscroll`      : Enable a hardcoded horizontal scroll for treeview 
+`tree_xscroll`      : bool: Enable a hardcoded horizontal scroll for treeview 
 
-`multiselect`       : File-list multiselect support, returns a list either way
+`multiselect`       : bool: File-list multiselect support, returns a list either way
 
-`select_dirs`       : File-list shows directories (folder-browser)
+`select_dirs`       : bool: File-list shows directories (folder-browser)
 
-`select_files`      : File-list shows files (file-browser)
+`select_files`      : bool: File-list shows files (file-browser)
 
 Ufd still has several [boolean constructor parameters] options & behavioral tweaks in development that will optionally restrict / expand upon its behavior to match the context in which it is used. 
 
@@ -75,5 +76,4 @@ result = dialog()
 ```
 
 
-<img  src="https://i.imgur.com/1X8c48Y.png">
-<img  src="https://i.imgur.com/XLXe8Nc.png">
+![](https://i.imgur.com/W6G068f.png)
