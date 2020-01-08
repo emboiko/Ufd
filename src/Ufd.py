@@ -2,6 +2,8 @@ from tkinter import (
     Tk,
     Toplevel,
     Listbox,
+    Button,
+    Label,
     Scrollbar,
     PhotoImage,
     messagebox
@@ -13,16 +15,14 @@ from re import split as re_split
 from subprocess import run
 from utils import get_disks, flip_slashes, get_offset
 
+
 #Todo:
 #MVC refactor / better data structures
 #Search feature
 #Make Directory
-#UI can be made more user friendly with a submit button rather than <Return>
 #Better path delimeter handling + delimiter kwarg
 #Linux / Mac support
 
-#Cancel/close-dialog bug: almost always returns something when cancelled
-#A wm protocol will solve this
 
 class Ufd:
     """
@@ -34,6 +34,7 @@ class Ufd:
 
     def __init__(
         self,
+        title="Universal File Dialog",
         show_hidden_files=False,
         include_files=False,
         tree_xscroll=False,
@@ -43,7 +44,8 @@ class Ufd:
     ):
 
         """
-            Init kwargs as object attributes + save references to TK.PhotoImages
+            Init kwargs as object attributes 
+            + save references to TK.PhotoImages
         """
 
         root = Tk()
@@ -74,9 +76,17 @@ class Ufd:
         else:
             self.select_files = False
 
-        self.file_icon=PhotoImage(file=f"{dirname(__file__)}/file.gif").subsample(50)
-        self.folder_icon=PhotoImage(file=f"{dirname(__file__)}/folder.gif").subsample(15)
-        self.disk_icon=PhotoImage(file=f"{dirname(__file__)}/disk.gif").subsample(15)
+        self.title = title
+
+        self.file_icon=PhotoImage(
+            file=f"{dirname(__file__)}/file.gif"
+        ).subsample(50)
+        self.folder_icon=PhotoImage(
+            file=f"{dirname(__file__)}/folder.gif"
+        ).subsample(15)
+        self.disk_icon=PhotoImage(
+            file=f"{dirname(__file__)}/disk.gif"
+        ).subsample(15)
 
 
     def __call__(self):
@@ -93,9 +103,10 @@ class Ufd:
         self.dialog.geometry(f"+{width_offset}+{height_offset}")
         self.dialog.update()
 
-        self.dialog.title("Universal File Dialog")
+        self.dialog.title(self.title)
         self.dialog.iconbitmap(f"{dirname(__file__)}/main_icon.ico")
-
+        
+        # Layout:
         # Tkinter x_scroll is broken for treeview
         # https://stackoverflow.com/questions/49715456
         # https://stackoverflow.com/questions/14359906
@@ -122,6 +133,21 @@ class Ufd:
             relief="ridge"
         )
 
+        self.browse_label = Label(self.dialog, text="Browse")
+        self.select_label = Label(self.dialog, text="Select")
+
+        self.cancel_button = Button(
+            self.dialog,
+            text="Cancel",
+            command=self.cancel
+        )
+
+        self.submit_button = Button(
+            self.dialog,
+            text="Submit",
+            command=self.submit
+        )
+
         if self.multiselect:
             self.file_list.config(selectmode="extended")
         else:
@@ -132,22 +158,33 @@ class Ufd:
         self.file_list_x_scrollbar.config(command=self.file_list.xview)
         self.file_list_y_scrollbar.config(command=self.file_list.yview)
         
-        self.dialog.grid_rowconfigure(0, weight=1)
+        #Layout:
+        self.dialog.grid_rowconfigure(1, weight=1)
         self.dialog.grid_columnconfigure(0, weight=1)
         self.dialog.grid_columnconfigure(2, weight=1)
 
-        self.tree.grid(row=0, column=0, sticky="nsew")
-        self.tree_y_scrollbar.grid(row=0, column=1, sticky="ns")
-        self.file_list.grid(row=0, column=2, sticky="nsew")
-        self.file_list_y_scrollbar.grid(row=0, column=3, sticky="ns")
-        self.tree_x_scrollbar.grid(row=1, column=0, sticky="ew")
-        self.file_list_x_scrollbar.grid(row=1, column=2, sticky="ew")
+        self.browse_label.grid(row=0, column=0)
+        self.select_label.grid(row=0, column=2)
+        
+        self.tree.grid(row=1, column=0, sticky="nsew")
+        self.tree_y_scrollbar.grid(row=1, column=1, sticky="ns")
+        self.tree_x_scrollbar.grid(row=2, column=0, sticky="ew")
 
+        self.file_list.grid(row=1, column=2, sticky="nsew")
+        self.file_list_y_scrollbar.grid(row=1, column=3, sticky="ns")
+        self.file_list_x_scrollbar.grid(row=2, column=2, sticky="ew")
+
+        self.cancel_button.grid(row=3, column=0, sticky="w", padx=10, pady=10)
+        self.submit_button.grid(row=3, column=2, columnspan=2, sticky="e", padx=10, pady=10)
+        
+        #Bindings, Protocols, & Events
         self.tree.bind("<Double-Button-1>", self.dialog_populate)
         self.tree.bind("<Return>", self.dialog_populate)
         self.tree.bind("<Right>", self.dialog_populate)
         self.file_list.bind("<<ListboxSelect>>", self.selection_populate)
-        self.file_list.bind("<Return>", self.destroy_dialog)
+        self.file_list.bind("<Return>", self.submit)
+
+        self.dialog.protocol("WM_DELETE_WINDOW", self.cancel)
 
         if self.tree_xscroll:
             self.tree.column("#0", minwidth=1000)
@@ -171,7 +208,7 @@ class Ufd:
 
     def __repr__(self):
         """
-            Return full string representation of constructor call
+            Return full string representation of constructor signature
         """
 
         return f"Ufd(show_hidden_files={self.show_hidden_files},"\
@@ -185,7 +222,7 @@ class Ufd:
 
     def init_dialog_populate(self):
         """
-            Called each time show_dialog() is called, to initialize the dialog.
+            Called once per self.__call()__, initializes the dialog.
 
             This function populates the treeview in the Add Items dialog with
             data returned from get disks. The path in its entirety is loaded into
@@ -334,9 +371,23 @@ class Ufd:
             self.dialog_selection.append(self.file_list.get(i))
 
 
-    def destroy_dialog(self, event=None):
+    def submit(self, event=None):
         """
-            Callback for <Return> on the file listbox.
+            Satisfies wait_window() in self.__call__()
+
+            (Callback for <Return>, <Button-1> on file_list, submit_button)
+        """
+        
+        self.dialog.destroy()
+
+
+    def cancel(self, event=None):
+        """
+            Satisfies wait_window() in self.__call__() 
+
+            (Callback for <Button-1> on submit_button)
+            (Callback for protocol "WM_DELETE_WINDOW" on self.dialog)
         """
 
+        self.dialog_selection.clear()
         self.dialog.destroy()
