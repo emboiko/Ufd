@@ -1,5 +1,9 @@
 # Universal File Dialog
 
+<p align="center">
+	<img src="https://i.imgur.com/W6G068f.png">
+</p>
+
 Import:
 
 `from Ufd import Ufd`
@@ -74,6 +78,3 @@ result = dialog()
 >> result
 >> ["C:some_dir/file1.ext"]
 ```
-
-
-![](https://i.imgur.com/W6G068f.png)
