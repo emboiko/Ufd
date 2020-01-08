@@ -211,7 +211,9 @@ class Ufd:
             Return full string representation of constructor signature
         """
 
-        return f"Ufd(show_hidden_files={self.show_hidden_files},"\
+        return f"Ufd("\
+        f"title=\"{self.title}\","\
+        f" show_hidden_files={self.show_hidden_files},"\
         f" include_files={self.include_files},"\
         f" tree_xscroll={self.tree_xscroll},"\
         f" multiselect={self.multiselect},"\

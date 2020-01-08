@@ -27,6 +27,7 @@ Ufd's full constructor signature looks like this:
 ```
 def __init__(
     self,
+    title="Universal File Dialog",
     show_hidden_files=False,
     include_files=False,
     tree_xscroll=False,
