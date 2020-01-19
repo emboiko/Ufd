@@ -224,7 +224,7 @@ class Ufd:
 
     def init_dialog_populate(self):
         """
-            Called once per self.__call()__, initializes the dialog.
+            Called once per self.__call__(), initializes the dialog.
 
             This function populates the treeview in the Add Items dialog with
             data returned from get disks. The path in its entirety is loaded into
