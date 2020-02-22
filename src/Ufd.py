@@ -1,6 +1,7 @@
 from tkinter import (
     Tk,
     Toplevel,
+    PanedWindow,
     Listbox,
     Button,
     Label,
@@ -9,19 +10,10 @@ from tkinter import (
     messagebox
 )
 from tkinter.ttk import Treeview
-from os.path import isdir, dirname, exists
-from posixpath import join
-from re import split as re_split
+from posixpath import join, isdir, exists
+from re import split, findall, sub
 from subprocess import run
-from utils import get_disks, flip_slashes, get_offset
-
-
-#Todo:
-#MVC refactor / better data structures
-#Search feature
-#Make Directory
-#Better path delimeter handling + delimiter kwarg
-#Linux / Mac support
+from math import ceil
 
 
 class Ufd:
@@ -34,22 +26,21 @@ class Ufd:
 
     def __init__(
         self,
-        title="Universal File Dialog",
-        show_hidden_files=False,
-        include_files=False,
-        tree_xscroll=False,
-        multiselect=True,
-        select_dirs=True,
-        select_files=True,
+        title:str="Universal File Dialog",
+        show_hidden_files:bool=False,
+        include_files:bool=False,
+        tree_xscroll:bool=False,
+        multiselect:bool=True,
+        select_dirs:bool=True,
+        select_files:bool=True,
     ):
 
         """
-            Init kwargs as object attributes 
-            + save references to TK.PhotoImages
+            Init kwargs as object attributes, save references to 
+            Tk PhotoImages, & define the widgets + layout
         """
 
-        root = Tk()
-        root.withdraw()
+        self.title = title
 
         if show_hidden_files:
             self.show_hidden_files = True
@@ -60,9 +51,9 @@ class Ufd:
         else:
             self.include_files = False
         if tree_xscroll:
-            self.tree_xscroll = True
+            self.treeview_xscroll = True
         else:
-            self.tree_xscroll = False
+            self.treeview_xscroll = False
         if multiselect:
             self.multiselect = True
         else:
@@ -76,55 +67,60 @@ class Ufd:
         else:
             self.select_files = False
 
-        self.title = title
+        # Tkinter:
+        self.dialog = Tk()
+        self.dialog.withdraw()
+        self.dialog.title(self.title)
+        self.dialog.minsize(width=300, height=200)
+        self.dialog.geometry("500x300")
 
         self.file_icon=PhotoImage(
-            file=f"{dirname(__file__)}/file.gif"
+            file="file.gif"
         ).subsample(50)
         self.folder_icon=PhotoImage(
-            file=f"{dirname(__file__)}/folder.gif"
+            file="folder.gif"
         ).subsample(15)
         self.disk_icon=PhotoImage(
-            file=f"{dirname(__file__)}/disk.gif"
+            file=f"disk.gif"
         ).subsample(15)
 
-
-    def __call__(self):
-        """
-            Display dialog & return selection
-        """
-
-        self.dialog=Toplevel()
-        self.dialog.grab_set()
-        self.dialog.geometry("500x300")
-        self.dialog.minsize(width=300, height=200)
-        self.dialog.update()
-        (width_offset, height_offset)=get_offset(self.dialog)
-        self.dialog.geometry(f"+{width_offset}+{height_offset}")
-        self.dialog.update()
-
-        self.dialog.title(self.title)
-        self.dialog.iconbitmap(f"{dirname(__file__)}/main_icon.ico")
+        self.dialog.iconbitmap("main_icon.ico")
         
-        # Layout:
-        # Tkinter x_scroll is broken for treeview
-        # https://stackoverflow.com/questions/49715456
-        # https://stackoverflow.com/questions/14359906
-        self.tree_x_scrollbar=Scrollbar(self.dialog, orient="horizontal")
-        self.tree_y_scrollbar=Scrollbar(self.dialog, orient="vertical")
-        self.file_list_x_scrollbar=Scrollbar(self.dialog, orient="horizontal")
-        self.file_list_y_scrollbar=Scrollbar(self.dialog, orient="vertical")
-        
-        self.tree=Treeview(
+        # Widgets:
+        self.paneview = PanedWindow(
             self.dialog,
-            xscrollcommand=self.tree_x_scrollbar.set,
-            yscrollcommand=self.tree_y_scrollbar.set,
+            sashwidth=7,
+            bg="#cccccc",
+            bd=0,
+        )
+
+        self.left_pane = PanedWindow(self.paneview, orient="vertical")
+        self.right_pane = PanedWindow(self.paneview, orient="vertical")
+        self.paneview.add(self.left_pane)
+        self.paneview.add(self.right_pane)
+
+        self.treeview_x_scrollbar=Scrollbar(self.left_pane, orient="horizontal")
+        self.treeview_y_scrollbar=Scrollbar(self.left_pane, orient="vertical")
+        self.file_list_x_scrollbar=Scrollbar(self.right_pane, orient="horizontal")
+        self.file_list_y_scrollbar=Scrollbar(self.right_pane, orient="vertical")
+        
+        self.treeview=Treeview(
+            self.left_pane,
+            xscrollcommand=self.treeview_x_scrollbar.set,
+            yscrollcommand=self.treeview_y_scrollbar.set,
             show="tree",
             selectmode="browse"
         )
 
+        # Tkinter x_scroll is broken for treeview
+        # https://stackoverflow.com/questions/49715456
+        # https://stackoverflow.com/questions/14359906
+        # Lousy bandaid:
+        if self.treeview_xscroll:
+            self.treeview.column("#0", minwidth=1000)
+
         self.file_list=Listbox(
-            self.dialog,
+            self.right_pane,
             xscrollcommand=self.file_list_x_scrollbar.set,
             yscrollcommand=self.file_list_y_scrollbar.set,
             width=34,
@@ -133,73 +129,104 @@ class Ufd:
             relief="ridge"
         )
 
-        self.browse_label = Label(self.dialog, text="Browse")
-        self.select_label = Label(self.dialog, text="Select")
-
-        self.cancel_button = Button(
-            self.dialog,
-            text="Cancel",
-            command=self.cancel
-        )
-
-        self.submit_button = Button(
-            self.dialog,
-            text="Submit",
-            command=self.submit
-        )
-
         if self.multiselect:
             self.file_list.config(selectmode="extended")
         else:
             self.file_list.config(selectmode="browse")
 
-        self.tree_x_scrollbar.config(command=self.tree.xview)
-        self.tree_y_scrollbar.config(command=self.tree.yview)
+        self.browse_label = Label(self.left_pane, text="Browse")
+        self.select_label = Label(self.right_pane, text="Select")
+
+        self.cancel_button = Button(
+            self.left_pane,
+            text="Cancel",
+            command=self.cancel
+        )
+
+        self.submit_button = Button(
+            self.right_pane,
+            text="Submit",
+            command=self.submit
+        )
+
+        self.treeview_x_scrollbar.config(command=self.treeview.xview)
+        self.treeview_y_scrollbar.config(command=self.treeview.yview)
         self.file_list_x_scrollbar.config(command=self.file_list.xview)
         self.file_list_y_scrollbar.config(command=self.file_list.yview)
         
         #Layout:
-        self.dialog.grid_rowconfigure(1, weight=1)
-        self.dialog.grid_columnconfigure(0, weight=1)
-        self.dialog.grid_columnconfigure(2, weight=1)
+        self.dialog.rowconfigure(0, weight=1)
+        self.dialog.columnconfigure(0, weight=1)
+
+        self.left_pane.grid_rowconfigure(1, weight=1)
+        self.left_pane.grid_columnconfigure(0, weight=1)
+        self.right_pane.grid_rowconfigure(1, weight=1)
+        self.right_pane.grid_columnconfigure(0, weight=1)
+
+        self.paneview.paneconfigure(
+            self.left_pane,
+            minsize=100,
+            #Start off w/ the sash centered in the GUI:
+            width=(self.dialog.winfo_width() / 2) - ceil((self.paneview.cget("sashwidth") * 1.5)),
+        )
+        self.paneview.paneconfigure(self.right_pane, minsize=100)
+
+        self.paneview.grid(row=0, column=0, sticky="nsew")
 
         self.browse_label.grid(row=0, column=0)
-        self.select_label.grid(row=0, column=2)
+        self.select_label.grid(row=0, column=0)
         
-        self.tree.grid(row=1, column=0, sticky="nsew")
-        self.tree_y_scrollbar.grid(row=1, column=1, sticky="ns")
-        self.tree_x_scrollbar.grid(row=2, column=0, sticky="ew")
+        self.treeview.grid(row=1, column=0, sticky="nsew")
+        self.treeview_y_scrollbar.grid(row=1, column=1, sticky="ns")
+        self.treeview_x_scrollbar.grid(row=2, column=0, columnspan=2, sticky="ew")
 
-        self.file_list.grid(row=1, column=2, sticky="nsew")
-        self.file_list_y_scrollbar.grid(row=1, column=3, sticky="ns")
-        self.file_list_x_scrollbar.grid(row=2, column=2, sticky="ew")
+        self.file_list.grid(row=1, column=0, sticky="nsew")
+        self.file_list_y_scrollbar.grid(row=1, column=1, sticky="ns")
+        self.file_list_x_scrollbar.grid(row=2, column=0, columnspan=2, sticky="ew")
 
         self.cancel_button.grid(row=3, column=0, sticky="w", padx=10, pady=10)
-        self.submit_button.grid(row=3, column=2, columnspan=2, sticky="e", padx=10, pady=10)
+        self.submit_button.grid(row=3, column=0, columnspan=2, sticky="e", padx=10, pady=10)
         
-        #Bindings, Protocols, & Events
-        self.tree.bind("<Double-Button-1>", self.dialog_populate)
-        self.tree.bind("<Return>", self.dialog_populate)
-        self.tree.bind("<Right>", self.dialog_populate)
+        #Bindings, Protocols, Events & Misc:
+        self.treeview.bind("<Double-Button-1>", self.dialog_populate)
+        self.treeview.bind("<Return>", self.dialog_populate)
+        self.treeview.bind("<Right>", self.dialog_populate)
         self.file_list.bind("<<ListboxSelect>>", self.selection_populate)
         self.file_list.bind("<Return>", self.submit)
 
         self.dialog.protocol("WM_DELETE_WINDOW", self.cancel)
 
-        if self.tree_xscroll:
-            self.tree.column("#0", minwidth=1000)
-
-        self.init_dialog_populate()
-        self.dialog_selection=[]
         self.dialog.focus()
-        
+
+        self.dialog_selection=[]
+
+        for disk in self.get_disks():
+
+            self.treeview.insert(
+                "",
+                index="end",
+                text=disk,
+                image=self.disk_icon,
+                value=disk
+            )
+
+
+    def __call__(self):
+        """
+            Display dialog & return selection
+        """
+
+        self.dialog.deiconify()
+        (width_offset, height_offset)=get_offset(self.dialog)
+        self.dialog.geometry(f"+{width_offset}+{height_offset}")
+
         self.dialog.wait_window()
         return self.dialog_selection
 
 
     def __str__(self):
         """
-            Return address
+            Return own address
         """
 
         return "Universal File Dialog"\
@@ -215,48 +242,42 @@ class Ufd:
         f"title=\"{self.title}\","\
         f" show_hidden_files={self.show_hidden_files},"\
         f" include_files={self.include_files},"\
-        f" tree_xscroll={self.tree_xscroll},"\
+        f" tree_xscroll={self.treeview_xscroll},"\
         f" multiselect={self.multiselect},"\
         f" select_dirs={self.select_dirs},"\
         f" select_files={self.select_files})"\
         f" @ {hex(id(self))}"
 
 
-    def init_dialog_populate(self):
+    def get_disks(self):
         """
-            Called once per self.__call__(), initializes the dialog.
-
-            This function populates the treeview in the Add Items dialog with
-            data returned from get disks. The path in its entirety is loaded into
-            an array called "values". The disk, or directory "name" is displayed
-            without the delimeter, as the treeview is only intended to show the 
-            name of the file or directory without a path, root, or delimeters.
+            Returns all mounted disks
         """
 
-        disks=get_disks()
+        logicaldisks=run([
+            "wmic",
+            "logicaldisk",
+            "get",
+            "name"
+        ], capture_output=True)
 
-        for disk in disks:
-            self.tree.insert(
-                "",
-                index="end",
-                text=disk[0:-1],
-                image=self.disk_icon,
-                value=disk
-            )
+        disks=findall("[A-Z]:", str(logicaldisks.stdout))
+        
+        return [disk + "/" for disk in disks]
 
 
-    def list_dir(self, full_path, force):
+    def list_dir(self, path, force):
         """
             Reads a directory with a shell call to dir, 
             returning contents based on the boolean FORCE
         """
 
-        full_path=flip_slashes(full_path, "back")
+        path = sub("/", "\\\\", path)
 
         if force:
             dir_listing=run([
                 "dir",
-                full_path,
+                path,
                 "/b",
                 "/a"
             ], shell=True, capture_output=True)
@@ -264,7 +285,7 @@ class Ufd:
         else:
             dir_listing=run([
                 "dir",
-                full_path,
+                path,
                 "/b"
             ], shell=True, capture_output=True)
 
@@ -279,33 +300,24 @@ class Ufd:
             raise Exception(err)
 
         str_output=output.decode("utf-8")
-        list_output=re_split("\r\n", str_output)
+        list_output=split("\r\n", str_output)
         
         return sorted([item for item in list_output if item])
 
-
+#####################
     def dialog_populate(self, event=None):
         """
             Dynamically populates & updates the treeview and listbox
-
-            Spaces in paths act as a delimeter for the values array to split on.
-            tree_item_name is just the result of building the pathname back together.
-
-            The treeview is populated with the data for the full path, 
-            and the file or directory name is displayed as text + an icon.
-
-            The listbox is more verbose, including the full absolute paths 
-            inside of what's been selected in the treeview.
         """
 
         error=False
 
-        children = self.tree.get_children(self.tree.focus())
+        children = self.treeview.get_children(self.treeview.focus())
         if children:
             for child in children:
-                self.tree.delete(child)
+                self.treeview.delete(child)
 
-        tree_item_name = self.tree.item(self.tree.focus())["values"]
+        tree_item_name = self.treeview.item(self.treeview.focus())["values"]
         tree_item_name = [str(piece) for piece in tree_item_name]
         tree_item_name = " ".join(tree_item_name)
 
@@ -321,26 +333,26 @@ class Ufd:
 
                 items=[]
                 error=True
-                self.tree.master.lift()
+                self.treeview.master.lift()
 
             for item in items:
-                full_path=join(tree_item_name, item)
+                path=join(tree_item_name, item)
 
-                if isdir(full_path): 
-                    self.tree.insert(
-                        self.tree.focus(),
+                if isdir(path): 
+                    self.treeview.insert(
+                        self.treeview.focus(),
                         index="end",
                         text=item,
-                        value=full_path,
+                        value=path,
                         image=self.folder_icon
                     )
 
                 elif self.include_files:
-                    self.tree.insert(
-                        self.tree.focus(),
+                    self.treeview.insert(
+                        self.treeview.focus(),
                         index="end",
                         text=item,
-                        value=full_path,
+                        value=path,
                         image=self.file_icon
                     )
 
@@ -350,15 +362,15 @@ class Ufd:
         if not error:
             if isdir(tree_item_name):
                 for item in items:
-                    full_path=join(tree_item_name, item)
-                    if self.select_dirs and isdir(full_path):
-                        self.file_list.insert("end", full_path)
+                    path=join(tree_item_name, item)
+                    if self.select_dirs and isdir(path):
+                        self.file_list.insert("end", path)
                     else:
-                        if self.select_files and (not isdir(full_path)):
-                            self.file_list.insert("end", full_path)
+                        if self.select_files and (not isdir(path)):
+                            self.file_list.insert("end", path)
             else:
                 self.file_list.insert("end", tree_item_name)
-
+####################
 
     def selection_populate(self, event=None):
         """
@@ -367,9 +379,9 @@ class Ufd:
         """
 
         self.dialog_selection.clear()
-        selection_index_arr=self.file_list.curselection()
+        selection_indices=self.file_list.curselection()
 
-        for i in selection_index_arr:
+        for i in selection_indices:
             self.dialog_selection.append(self.file_list.get(i))
 
 
@@ -393,3 +405,20 @@ class Ufd:
 
         self.dialog_selection.clear()
         self.dialog.destroy()
+
+
+def get_offset(tk_window):
+    """
+        Returns an appropriate offset for a given tkinter toplevel,
+        such that it always is created center screen on the primary display.
+    """
+
+    width_offset = int(
+        (tk_window.winfo_screenwidth() / 2) - (tk_window.winfo_width() / 2)
+    )
+
+    height_offset = int(
+        (tk_window.winfo_screenheight() / 2) - (tk_window.winfo_height() / 2)
+    )
+
+    return (width_offset, height_offset)
