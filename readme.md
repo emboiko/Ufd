@@ -19,7 +19,7 @@ or specify a bunch of options:
 ```
 dialog = Ufd(
 title="My Dialog"
-show_hidden_=True,
+show_hidden=True,
 include_files=True,
 tree_xscroll=True,
 multiselect=False
