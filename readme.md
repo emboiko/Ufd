@@ -1,7 +1,7 @@
 # Universal File Dialog
 
 <p align="center">
-	<img src="https://i.imgur.com/W6G068f.png">
+	<img src="https://i.imgur.com/yzIXiTs.png">
 </p>
 
 Import:
@@ -14,14 +14,16 @@ dialog = Ufd(**Kwargs)
 result = dialog()
 ```
 
-or
+or specify a bunch of options:
 
 ```
 dialog = Ufd(
-show_hidden_files=True,
+title="My Dialog"
+show_hidden_=True,
 include_files=True,
 tree_xscroll=True,
 multiselect=False
+select_dirs=False
 )
 result = dialog()
 ```
@@ -32,7 +34,7 @@ Ufd's full constructor signature looks like this:
 def __init__(
     self,
     title="Universal File Dialog",
-    show_hidden_files=False,
+    show_hidden=False,
     include_files=False,
     tree_xscroll=False,
     multiselect=True,
@@ -42,7 +44,7 @@ def __init__(
 ```
 `title`             : str: Window title
 
-`show_hidden_files` : bool: Include hidden file(s) or folder(s) in treeview
+`show_hidden`       : bool: Include hidden file(s) or folder(s) in treeview
 
 `include_files`     : bool: Include file(s) in treeview
 

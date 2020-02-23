@@ -27,7 +27,7 @@ class Ufd:
         self,
         title:str="Universal File Dialog",
         show_hidden:bool=False,
-        include_files:bool=False,
+        include_files:bool=True,
         tree_xscroll:bool=False,
         multiselect:bool=True,
         select_dirs:bool=True,
