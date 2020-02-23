@@ -187,7 +187,7 @@ class Ufd:
         self.cancel_button.grid(row=3, column=0, sticky="w", padx=10, pady=10)
         self.submit_button.grid(row=3, column=0, columnspan=2, sticky="e", padx=10, pady=10)
         
-        #Bindings, Protocols, Events & Misc:
+        #Bindings, Protocols, & Misc:
         self.treeview.bind("<Double-Button-1>", self.dialog_populate)
         self.treeview.bind("<Return>", self.dialog_populate)
         self.treeview.bind("<Right>", self.dialog_populate)
@@ -201,13 +201,11 @@ class Ufd:
         self.dialog_selection=[]
 
         for disk in self.get_disks():
-
             self.treeview.insert(
                 "",
                 index="end",
                 text=disk,
                 image=self.disk_icon,
-                value=disk
             )
 
 
@@ -217,7 +215,7 @@ class Ufd:
         """
 
         self.dialog.deiconify()
-        (width_offset, height_offset)=get_offset(self.dialog)
+        (width_offset, height_offset)=self.get_offset(self.dialog)
         self.dialog.geometry(f"+{width_offset}+{height_offset}")
 
         self.dialog.wait_window()
@@ -266,7 +264,7 @@ class Ufd:
         return [disk + "/" for disk in disks]
 
 
-    def list_dir(self, path, force):
+    def list_dir(self, path, force=False):
         """
             Reads a directory with a shell call to dir, 
             returning contents based on the boolean FORCE
@@ -309,6 +307,7 @@ class Ufd:
         """
             Dynamically populates & updates the treeview and listbox
         """
+        #embarrassingly bad code. 
 
         error=False
 
@@ -370,7 +369,7 @@ class Ufd:
                             self.file_list.insert("end", path)
             else:
                 self.file_list.insert("end", tree_item_name)
-####################
+
 
     def selection_populate(self, event=None):
         """
@@ -407,18 +406,19 @@ class Ufd:
         self.dialog.destroy()
 
 
-def get_offset(tk_window):
-    """
-        Returns an appropriate offset for a given tkinter toplevel,
-        such that it always is created center screen on the primary display.
-    """
+    @staticmethod
+    def get_offset(tk_window):
+        """
+            Returns an appropriate offset for a given tkinter toplevel,
+            such that it always is created center screen on the primary display.
+        """
 
-    width_offset = int(
-        (tk_window.winfo_screenwidth() / 2) - (tk_window.winfo_width() / 2)
-    )
+        width_offset = int(
+            (tk_window.winfo_screenwidth() / 2) - (tk_window.winfo_width() / 2)
+        )
 
-    height_offset = int(
-        (tk_window.winfo_screenheight() / 2) - (tk_window.winfo_height() / 2)
-    )
+        height_offset = int(
+            (tk_window.winfo_screenheight() / 2) - (tk_window.winfo_height() / 2)
+        )
 
-    return (width_offset, height_offset)
+        return (width_offset, height_offset)
