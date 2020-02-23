@@ -7,11 +7,10 @@ from tkinter import (
     Label,
     Scrollbar,
     PhotoImage,
-    messagebox
 )
 from tkinter.ttk import Treeview
-from posixpath import join, isdir, exists
-from re import split, findall, sub
+from os.path import isdir, isfile, normpath, split as path_split
+from re import findall, sub, split as re_split
 from subprocess import run
 from math import ceil
 
@@ -27,7 +26,7 @@ class Ufd:
     def __init__(
         self,
         title:str="Universal File Dialog",
-        show_hidden_files:bool=False,
+        show_hidden:bool=False,
         include_files:bool=False,
         tree_xscroll:bool=False,
         multiselect:bool=True,
@@ -42,10 +41,10 @@ class Ufd:
 
         self.title = title
 
-        if show_hidden_files:
-            self.show_hidden_files = True
+        if show_hidden:
+            self.show_hidden = True
         else:
-            self.show_hidden_files = False
+            self.show_hidden = False
         if include_files:
             self.include_files = True
         else:
@@ -193,12 +192,10 @@ class Ufd:
         self.treeview.bind("<Right>", self.dialog_populate)
         self.file_list.bind("<<ListboxSelect>>", self.selection_populate)
         self.file_list.bind("<Return>", self.submit)
-
         self.dialog.protocol("WM_DELETE_WINDOW", self.cancel)
 
-        self.dialog.focus()
-
-        self.dialog_selection=[]
+        self.dialog_selection = []
+        self.file_list_paths = []
 
         for disk in self.get_disks():
             self.treeview.insert(
@@ -207,6 +204,8 @@ class Ufd:
                 text=disk,
                 image=self.disk_icon,
             )
+
+        self.dialog.focus()
 
 
     def __call__(self):
@@ -238,7 +237,7 @@ class Ufd:
 
         return f"Ufd("\
         f"title=\"{self.title}\","\
-        f" show_hidden_files={self.show_hidden_files},"\
+        f" show_hidden={self.show_hidden},"\
         f" include_files={self.include_files},"\
         f" tree_xscroll={self.treeview_xscroll},"\
         f" multiselect={self.multiselect},"\
@@ -261,13 +260,14 @@ class Ufd:
 
         disks=findall("[A-Z]:", str(logicaldisks.stdout))
         
-        return [disk + "/" for disk in disks]
+        return [disk for disk in disks]
 
 
     def list_dir(self, path, force=False):
         """
-            Reads a directory with a shell call to dir, 
-            returning contents based on the boolean FORCE
+            Reads a directory with a shell call to dir.
+            Truthiness of bool force determines whether 
+            hidden items are returned or not.
         """
 
         path = sub("/", "\\\\", path)
@@ -298,77 +298,90 @@ class Ufd:
             raise Exception(err)
 
         str_output=output.decode("utf-8")
-        list_output=split("\r\n", str_output)
+        list_output=re_split("\r\n", str_output)
         
         return sorted([item for item in list_output if item])
 
-#####################
+
+    def climb(self, item):
+        """
+            Builds & returns a complete path to root directory,
+            including the item name itself as the path tail.
+            An extra delimiter is appeneded for the subsequent
+            child node, which is normalized in dialog_populate()
+        """
+        
+        item_text = self.treeview.item(item)["text"]
+        parent = self.treeview.parent(item)
+        path = ""
+        parents = []
+
+        while parent:
+            parents.append(self.treeview.item(parent)["text"] + "/")
+            parent = self.treeview.parent(parent)
+
+        for parent in reversed(parents):
+            path += parent
+
+        path += item_text + "/"
+        return path
+
+
     def dialog_populate(self, event=None):
         """
-            Dynamically populates & updates the treeview and listbox
+            Dynamically populates & updates the treeview, listbox,
+            and keeps track of the full paths corresponding to each
+            item in the listbox
         """
-        #embarrassingly bad code. 
 
-        error=False
-
-        children = self.treeview.get_children(self.treeview.focus())
-        if children:
-            for child in children:
-                self.treeview.delete(child)
-
-        tree_item_name = self.treeview.item(self.treeview.focus())["values"]
-        tree_item_name = [str(piece) for piece in tree_item_name]
-        tree_item_name = " ".join(tree_item_name)
-
-        if isdir(tree_item_name):
-            try:
-                if self.show_hidden_files:
-                    items=self.list_dir(tree_item_name, force=True)
-                else:
-                    items=self.list_dir(tree_item_name, force=False)
-                    
-            except Exception as err:
-                messagebox.showerror("Error.", err)
-
-                items=[]
-                error=True
-                self.treeview.master.lift()
-
-            for item in items:
-                path=join(tree_item_name, item)
-
-                if isdir(path): 
-                    self.treeview.insert(
-                        self.treeview.focus(),
-                        index="end",
-                        text=item,
-                        value=path,
-                        image=self.folder_icon
-                    )
-
-                elif self.include_files:
-                    self.treeview.insert(
-                        self.treeview.focus(),
-                        index="end",
-                        text=item,
-                        value=path,
-                        image=self.file_icon
-                    )
+        existing_children = self.treeview.get_children(self.treeview.focus())
+        [self.treeview.delete(child) for child in existing_children]
 
         while self.file_list.size():
             self.file_list.delete(0)
+            self.file_list_paths.pop()
 
-        if not error:
-            if isdir(tree_item_name):
-                for item in items:
-                    path=join(tree_item_name, item)
-                    if self.select_dirs and isdir(path):
-                        self.file_list.insert("end", path)
-                    else:
-                        if self.select_files and (not isdir(path)):
-                            self.file_list.insert("end", path)
-            else:
-                self.file_list.insert("end", tree_item_name)
+        focus_item = self.treeview.focus()
+        path = self.climb(focus_item)
+
+        if self.show_hidden:
+            children = self.list_dir(path, force=True)
+        else:
+            children = self.list_dir(path)
+
+        for child in children:
+            if isdir(path+child):
+
+                self.treeview.insert(
+                    focus_item,
+                    index="end",
+                    text=child,
+                    image=self.folder_icon
+                )
+
+                if self.select_dirs:
+                    self.file_list.insert("end", child)
+                    self.file_list_paths.append(path+child)
+
+            elif isfile(path+child):
+
+                if self.include_files:
+                    self.treeview.insert(
+                        focus_item,
+                        index="end",
+                        text=child,
+                        image=self.file_icon
+                    )
+
+                if self.select_files:
+                    self.file_list.insert("end", child)
+                    self.file_list_paths.append(path+child)
+
+        if isfile(normpath(path)):
+            (head, tail) = path_split(normpath(path))
+            head = sub("\\\\", "/", head)
+            self.file_list.insert("end", tail)
+            self.file_list_paths.append(head + "/" + tail)
 
 
     def selection_populate(self, event=None):
@@ -378,10 +391,10 @@ class Ufd:
         """
 
         self.dialog_selection.clear()
-        selection_indices=self.file_list.curselection()
 
+        selection_indices=self.file_list.curselection()
         for i in selection_indices:
-            self.dialog_selection.append(self.file_list.get(i))
+            self.dialog_selection.append(self.file_list_paths[i])
 
 
     def submit(self, event=None):
