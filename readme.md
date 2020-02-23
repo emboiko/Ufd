@@ -35,7 +35,7 @@ def __init__(
     self,
     title="Universal File Dialog",
     show_hidden=False,
-    include_files=False,
+    include_files=True,
     tree_xscroll=False,
     multiselect=True,
     select_dirs=True,
