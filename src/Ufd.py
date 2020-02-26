@@ -246,9 +246,12 @@ class Ufd:
         f" @ {hex(id(self))}"
 
 
-    def get_disks(self):
+    @staticmethod
+    def get_disks():
         """
-            Returns all mounted disks
+            Returns all mounted disks (for Windows)
+
+            >> ["A:", "B:", "C:"]
         """
 
         logicaldisks=run([
@@ -263,11 +266,12 @@ class Ufd:
         return [disk for disk in disks]
 
 
-    def list_dir(self, path, force=False):
+    @staticmethod
+    def list_dir(path, force=False):
         """
             Reads a directory with a shell call to dir.
             Truthiness of bool force determines whether 
-            hidden items are returned or not.
+            hidden items are returned or not. (For Windows)
         """
 
         path = sub("/", "\\\\", path)
@@ -376,12 +380,15 @@ class Ufd:
                 if self.select_files:
                     self.file_list.insert("end", child)
                     self.file_list_paths.append(path+child)
+                    self.file_list.itemconfig("end", {"bg":"#EAEAEA"})
 
         if isfile(normpath(path)):
             (head, tail) = path_split(normpath(path))
             head = sub("\\\\", "/", head)
+            
             self.file_list.insert("end", tail)
             self.file_list_paths.append(head + "/" + tail)
+            self.file_list.itemconfig("end", {"bg":"#EAEAEA"})
 
 
     def selection_populate(self, event=None):
@@ -392,8 +399,7 @@ class Ufd:
 
         self.dialog_selection.clear()
 
-        selection_indices=self.file_list.curselection()
-        for i in selection_indices:
+        for i in self.file_list.curselection():
             self.dialog_selection.append(self.file_list_paths[i])
 
 
