@@ -11,6 +11,7 @@ from tkinter import (
 from tkinter.ttk import Treeview
 from os.path import isdir, isfile, normpath, split as path_split
 from re import findall, sub, split as re_split
+from platform import system
 from subprocess import run
 from math import ceil
 
@@ -254,12 +255,13 @@ class Ufd:
             >> ["A:", "B:", "C:"]
         """
 
-        logicaldisks=run([
-            "wmic",
-            "logicaldisk",
-            "get",
-            "name"
-        ], capture_output=True)
+        if system() != "Windows":
+            raise OSError("For use with Windows platforms.")
+
+        logicaldisks=run(
+            ["wmic", "logicaldisk", "get", "name"],
+            capture_output=True
+        )
 
         disks=findall("[A-Z]:", str(logicaldisks.stdout))
         
