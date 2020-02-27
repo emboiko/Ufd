@@ -33,6 +33,7 @@ class Ufd:
         multiselect:bool=True,
         select_dirs:bool=True,
         select_files:bool=True,
+        unix_delimiter:bool=True,
     ):
 
         """
@@ -40,7 +41,10 @@ class Ufd:
             Tk PhotoImages, & define the widgets + layout
         """
 
-        self.title = title
+        if not isinstance(title, str):
+            raise TypeError("Argument title must be type string.")
+        else:
+            self.title = title
 
         if show_hidden:
             self.show_hidden = True
@@ -66,6 +70,10 @@ class Ufd:
             self.select_files = True
         else:
             self.select_files = False
+        if unix_delimiter:
+            self.unix_delimiter = True
+        else:
+            self.unix_delimiter = False
 
         # Tkinter:
         self.dialog = Tk()
@@ -219,6 +227,11 @@ class Ufd:
         self.dialog.geometry(f"+{width_offset}+{height_offset}")
 
         self.dialog.wait_window()
+
+        if not self.unix_delimiter:
+            for i, path in enumerate(self.dialog_selection):
+                self.dialog_selection[i] = sub("/", "\\\\", path)
+
         return self.dialog_selection
 
 
