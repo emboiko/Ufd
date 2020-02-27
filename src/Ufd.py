@@ -83,13 +83,18 @@ class Ufd:
         self.dialog.geometry("500x300")
 
         self.file_icon=PhotoImage(
-            file=f"{dirname(__file__)}/file.gif"
+            file=f"{dirname(__file__)}/file.gif",
+            master=self.dialog
         ).subsample(50)
+
         self.folder_icon=PhotoImage(
-            file=f"{dirname(__file__)}/folder.gif"
+            file=f"{dirname(__file__)}/folder.gif",
+            master=self.dialog
         ).subsample(15)
+        
         self.disk_icon=PhotoImage(
-            file=f"{dirname(__file__)}/disk.gif"
+            file=f"{dirname(__file__)}/disk.gif",
+            master=self.dialog
         ).subsample(15)
 
         self.dialog.iconbitmap(f"{dirname(__file__)}/main_icon.ico")
