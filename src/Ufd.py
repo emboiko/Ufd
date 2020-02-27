@@ -256,7 +256,8 @@ class Ufd:
         f" tree_xscroll={self.treeview_xscroll},"\
         f" multiselect={self.multiselect},"\
         f" select_dirs={self.select_dirs},"\
-        f" select_files={self.select_files})"\
+        f" select_files={self.select_files},"\
+        f" unix_delimiter={self.unix_delimiter})"\
         f" @ {hex(id(self))}"
 
 
