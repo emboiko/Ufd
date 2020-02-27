@@ -18,12 +18,12 @@ or specify a bunch of options:
 
 ```
 dialog = Ufd(
-title="My Dialog"
-show_hidden=True,
-include_files=True,
-tree_xscroll=True,
-multiselect=False
-select_dirs=False
+    title="My Dialog"
+    show_hidden=True,
+    include_files=True,
+    tree_xscroll=True,
+    multiselect=False
+    select_dirs=False
 )
 result = dialog()
 ```
@@ -33,13 +33,14 @@ Ufd's full constructor signature looks like this:
 ```
 def __init__(
     self,
-    title="Universal File Dialog",
-    show_hidden=False,
-    include_files=True,
-    tree_xscroll=False,
-    multiselect=True,
-    select_dirs=True,
-    select_files=True,
+    title:str="Universal File Dialog",
+    show_hidden:bool=False,
+    include_files:bool=True,
+    tree_xscroll:bool=False,
+    multiselect:bool=True,
+    select_dirs:bool=True,
+    select_files:bool=True,
+    unix_delimiter:bool=True,
 ):
 ```
 `title`             : str: Window title
@@ -55,6 +56,8 @@ def __init__(
 `select_dirs`       : bool: File-list shows directories (folder-browser)
 
 `select_files`      : bool: File-list shows files (file-browser)
+
+`unix_delimiter`    : bool: Return paths delimited with "/" or "\"
 
 Ufd still has several [boolean constructor parameters] options & behavioral tweaks in development that will optionally restrict / expand upon its behavior to match the context in which it is used. 
 
