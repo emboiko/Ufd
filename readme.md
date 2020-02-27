@@ -57,7 +57,7 @@ def __init__(
 
 `select_files`      : bool: File-list shows files (file-browser)
 
-`unix_delimiter`    : bool: Return paths delimited with "/" or "\"
+`unix_delimiter`    : bool: Return paths delimited with "/" or "\\"
 
 Ufd still has several [boolean constructor parameters] options & behavioral tweaks in development that will optionally restrict / expand upon its behavior to match the context in which it is used. 
 
