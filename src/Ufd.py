@@ -9,7 +9,7 @@ from tkinter import (
     PhotoImage,
 )
 from tkinter.ttk import Treeview
-from os.path import isdir, isfile, normpath, split as path_split
+from os.path import dirname, isdir, isfile, normpath, split as path_split
 from re import findall, sub, split as re_split
 from platform import system
 from subprocess import run
@@ -83,16 +83,16 @@ class Ufd:
         self.dialog.geometry("500x300")
 
         self.file_icon=PhotoImage(
-            file="file.gif"
+            file=f"{dirname(__file__)}/file.gif"
         ).subsample(50)
         self.folder_icon=PhotoImage(
-            file="folder.gif"
+            file=f"{dirname(__file__)}/folder.gif"
         ).subsample(15)
         self.disk_icon=PhotoImage(
-            file=f"disk.gif"
+            file=f"{dirname(__file__)}/disk.gif"
         ).subsample(15)
 
-        self.dialog.iconbitmap("main_icon.ico")
+        self.dialog.iconbitmap(f"{dirname(__file__)}/main_icon.ico")
         
         # Widgets:
         self.paneview = PanedWindow(
