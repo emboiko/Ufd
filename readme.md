@@ -18,10 +18,9 @@ or specify a bunch of options:
 
 ```
 dialog = Ufd(
-    title="My Dialog"
+    title="My Dialog",
+    icon="path/to/some_icon.ico",
     show_hidden=True,
-    include_files=True,
-    tree_xscroll=True,
     multiselect=False
     select_dirs=False
 )
@@ -34,6 +33,7 @@ Ufd's full constructor signature looks like this:
 def __init__(
     self,
     title:str="Universal File Dialog",
+    icon:str="",
     show_hidden:bool=False,
     include_files:bool=True,
     tree_xscroll:bool=False,
@@ -44,6 +44,8 @@ def __init__(
 ):
 ```
 `title`             : str: Window title
+
+`icon`              : str: Path to your custom icon.ico file 
 
 `show_hidden`       : bool: Include hidden file(s) or folder(s) in treeview
 

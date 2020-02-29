@@ -27,6 +27,7 @@ class Ufd:
     def __init__(
         self,
         title:str="Universal File Dialog",
+        icon:str="",
         show_hidden:bool=False,
         include_files:bool=True,
         tree_xscroll:bool=False,
@@ -45,6 +46,14 @@ class Ufd:
             raise TypeError("Argument title must be type string.")
         else:
             self.title = title
+
+        if icon:
+            if not isinstance(icon, str):
+                raise TypeError("Argument icon must be type string.")
+            else:
+                self.icon = icon
+        else: 
+            self.icon = ""
 
         if show_hidden:
             self.show_hidden = True
@@ -97,7 +106,10 @@ class Ufd:
             master=self.dialog
         ).subsample(15)
 
-        self.dialog.iconbitmap(f"{dirname(__file__)}/main_icon.ico")
+        if self.icon:
+            self.dialog.iconbitmap(self.icon)
+        else:
+            self.dialog.iconbitmap(f"{dirname(__file__)}/icon.ico")
         
         # Widgets:
         self.paneview = PanedWindow(
