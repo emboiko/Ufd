@@ -9,7 +9,8 @@ from tkinter import (
     PhotoImage,
 )
 from tkinter.ttk import Treeview
-from os.path import dirname, isdir, isfile, normpath, split as path_split
+from os.path import dirname, isdir, isfile, split as path_split
+from posixpath import normpath
 from re import findall, sub, split as re_split
 from platform import system
 from subprocess import run
@@ -159,9 +160,6 @@ class Ufd:
         else:
             self.file_list.config(selectmode="browse")
 
-        self.browse_label = Label(self.left_pane, text="Browse")
-        self.select_label = Label(self.right_pane, text="Select")
-
         self.cancel_button = Button(
             self.left_pane,
             text="Cancel",
@@ -183,9 +181,9 @@ class Ufd:
         self.dialog.rowconfigure(0, weight=1)
         self.dialog.columnconfigure(0, weight=1)
 
-        self.left_pane.grid_rowconfigure(1, weight=1)
+        self.left_pane.grid_rowconfigure(0, weight=1)
         self.left_pane.grid_columnconfigure(0, weight=1)
-        self.right_pane.grid_rowconfigure(1, weight=1)
+        self.right_pane.grid_rowconfigure(0, weight=1)
         self.right_pane.grid_columnconfigure(0, weight=1)
 
         self.paneview.paneconfigure(
@@ -198,24 +196,22 @@ class Ufd:
 
         self.paneview.grid(row=0, column=0, sticky="nsew")
 
-        self.browse_label.grid(row=0, column=0)
-        self.select_label.grid(row=0, column=0)
-        
-        self.treeview.grid(row=1, column=0, sticky="nsew")
-        self.treeview_y_scrollbar.grid(row=1, column=1, sticky="ns")
-        self.treeview_x_scrollbar.grid(row=2, column=0, columnspan=2, sticky="ew")
+        self.treeview.grid(row=0, column=0, sticky="nsew")
+        self.treeview_y_scrollbar.grid(row=0, column=1, sticky="ns")
+        self.treeview_x_scrollbar.grid(row=1, column=0, columnspan=2, sticky="ew")
 
-        self.file_list.grid(row=1, column=0, sticky="nsew")
-        self.file_list_y_scrollbar.grid(row=1, column=1, sticky="ns")
-        self.file_list_x_scrollbar.grid(row=2, column=0, columnspan=2, sticky="ew")
+        self.file_list.grid(row=0, column=0, sticky="nsew")
+        self.file_list_y_scrollbar.grid(row=0, column=1, sticky="ns")
+        self.file_list_x_scrollbar.grid(row=1, column=0, columnspan=2, sticky="ew")
 
-        self.cancel_button.grid(row=3, column=0, sticky="w", padx=10, pady=10)
-        self.submit_button.grid(row=3, column=0, columnspan=2, sticky="e", padx=10, pady=10)
+        self.cancel_button.grid(row=2, column=0, sticky="w", padx=10, pady=10)
+        self.submit_button.grid(row=2, column=0, columnspan=2, sticky="e", padx=10, pady=10)
         
         #Bindings, Protocols, & Misc:
         self.treeview.bind("<Double-Button-1>", self.dialog_populate)
         self.treeview.bind("<Return>", self.dialog_populate)
         self.treeview.bind("<Right>", self.dialog_populate)
+        self.treeview.bind("<<TreeviewSelect>>", self.treeview_select)
         self.file_list.bind("<<ListboxSelect>>", self.selection_populate)
         self.file_list.bind("<Return>", self.submit)
         self.dialog.protocol("WM_DELETE_WINDOW", self.cancel)
@@ -376,7 +372,8 @@ class Ufd:
 
         while self.file_list.size():
             self.file_list.delete(0)
-            self.file_list_paths.pop()
+        
+        self.file_list_paths.clear()
 
         focus_item = self.treeview.focus()
         path = self.climb(focus_item)
@@ -430,10 +427,24 @@ class Ufd:
             listbox (Callback for <<ListboxSelect>>).
         """
 
-        self.dialog_selection.clear()
+        if self.treeview.selection():
+            self.treeview.selection_remove(self.treeview.selection()[0])
 
+        self.dialog_selection.clear()
+        
         for i in self.file_list.curselection():
             self.dialog_selection.append(self.file_list_paths[i])
+
+
+    def treeview_select(self, event=None):
+        self.dialog_selection.clear()
+
+        for i, selection in enumerate(self.file_list.curselection()):
+            self.file_list.selection_clear(selection)
+
+        self.dialog_selection.append(
+            normpath(self.climb(self.treeview.focus()))
+        )
 
 
     def submit(self, event=None):
