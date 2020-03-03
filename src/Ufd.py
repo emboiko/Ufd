@@ -208,16 +208,16 @@ class Ufd:
         self.submit_button.grid(row=2, column=0, columnspan=2, sticky="e", padx=10, pady=10)
         
         #Bindings, Protocols, & Misc:
+        self.treeview.bind("<<TreeviewSelect>>", self.treeview_select)
         self.treeview.bind("<Double-Button-1>", self.dialog_populate)
         self.treeview.bind("<Return>", self.dialog_populate)
         self.treeview.bind("<Right>", self.dialog_populate)
-        self.treeview.bind("<<TreeviewSelect>>", self.treeview_select)
-        self.file_list.bind("<<ListboxSelect>>", self.selection_populate)
+        self.file_list.bind("<<ListboxSelect>>", self.list_box_select)
         self.file_list.bind("<Return>", self.submit)
         self.dialog.protocol("WM_DELETE_WINDOW", self.cancel)
 
         self.dialog_selection = []
-        self.file_list_paths = []
+        self.selection_paths = []
 
         for disk in self.get_disks():
             self.treeview.insert(
@@ -367,13 +367,14 @@ class Ufd:
             item in the listbox
         """
 
+        if not self.treeview.focus():
+            return
+
         existing_children = self.treeview.get_children(self.treeview.focus())
         [self.treeview.delete(child) for child in existing_children]
 
-        while self.file_list.size():
-            self.file_list.delete(0)
-        
-        self.file_list_paths.clear()
+        self.file_list.delete(0, "end")
+        self.selection_paths.clear()
 
         focus_item = self.treeview.focus()
         path = self.climb(focus_item)
@@ -395,7 +396,7 @@ class Ufd:
 
                 if self.select_dirs:
                     self.file_list.insert("end", child)
-                    self.file_list_paths.append(path+child)
+                    self.selection_paths.append(path+child)
 
             elif isfile(path+child):
 
@@ -409,19 +410,19 @@ class Ufd:
 
                 if self.select_files:
                     self.file_list.insert("end", child)
-                    self.file_list_paths.append(path+child)
                     self.file_list.itemconfig("end", {"bg":"#EAEAEA"})
+                    self.selection_paths.append(path+child)
 
         if isfile(normpath(path)):
             (head, tail) = path_split(normpath(path))
             head = sub("\\\\", "/", head)
             
             self.file_list.insert("end", tail)
-            self.file_list_paths.append(head + "/" + tail)
+            self.selection_paths.append(head + "/" + tail)
             self.file_list.itemconfig("end", {"bg":"#EAEAEA"})
 
 
-    def selection_populate(self, event=None):
+    def list_box_select(self, event=None):
         """
             Dynamically refreshes the array of selected items in the
             listbox (Callback for <<ListboxSelect>>).
@@ -433,14 +434,14 @@ class Ufd:
         self.dialog_selection.clear()
         
         for i in self.file_list.curselection():
-            self.dialog_selection.append(self.file_list_paths[i])
+            self.dialog_selection.append(self.selection_paths[i])
 
 
     def treeview_select(self, event=None):
-        self.dialog_selection.clear()
+        for i in self.file_list.curselection():
+            self.file_list.selection_clear(i)
 
-        for i, selection in enumerate(self.file_list.curselection()):
-            self.file_list.selection_clear(selection)
+        self.dialog_selection.clear()
 
         self.dialog_selection.append(
             normpath(self.climb(self.treeview.focus()))
