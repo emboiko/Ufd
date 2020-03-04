@@ -1,8 +1,13 @@
 # Universal File Dialog
 
 <p align="center">
-	<img src="https://i.imgur.com/yzIXiTs.png">
+	<img src="https://i.imgur.com/0WsmsVD.png">
+	<img src="https://i.imgur.com/RIQBxge.png">
 </p>
+
+## Install & Use:
+
+`git clone https://github.com/emboiko/Ufd.git` (or grab the .zip)
 
 Import:
 
@@ -85,3 +90,10 @@ result = dialog()
 >> result
 >> ["C:some_dir/file1.ext"]
 ```
+
+## Tips & Tricks:
+
+- Drill through the treeview with `<Doubleclick>`, `<Enter>`, and/or ArrowKeys.
+- Treeview supports single-select via `<Doubleclick>` or the submit button.
+- Navigate the listbox on the right with the mouse or arrow keys. Multiselect is supported with `<Shift>` (span) & `<Ctrl>` (individuals), or by clicking + dragging the mouse. Select all with `<Ctrl+A>` as expected. Confirm selection in the listbox with `<Enter>` or the submit button.
+- Cancelling via the cancel button or the window manager will both return an empty list from the dialog.
