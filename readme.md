@@ -5,7 +5,7 @@
 	<img src="https://i.imgur.com/RIQBxge.png">
 </p>
 
-## Install & Use:
+## Install & Get Started:
 
 `git clone https://github.com/emboiko/Ufd.git` (or grab the .zip)
 
