@@ -121,8 +121,8 @@ class Ufd:
             bd=0,
         )
 
-        self.left_pane = PanedWindow(self.paneview, orient="vertical")
-        self.right_pane = PanedWindow(self.paneview, orient="vertical")
+        self.left_pane = PanedWindow(self.paneview)
+        self.right_pane = PanedWindow(self.paneview)
         self.paneview.add(self.left_pane)
         self.paneview.add(self.right_pane)
 
