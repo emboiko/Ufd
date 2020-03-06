@@ -91,6 +91,7 @@ class Ufd:
         self.dialog.title(self.title)
         self.dialog.minsize(width=300, height=200)
         self.dialog.geometry("500x300")
+        self.dialog.update_idletasks()
 
         self.file_icon=PhotoImage(
             file=f"{dirname(__file__)}/file.gif",
@@ -235,9 +236,10 @@ class Ufd:
             Display dialog & return selection
         """
 
-        self.dialog.deiconify()
         (width_offset, height_offset)=self.get_offset(self.dialog)
         self.dialog.geometry(f"+{width_offset}+{height_offset}")
+        self.dialog.update_idletasks()
+        self.dialog.deiconify()
 
         self.dialog.wait_window()
 
