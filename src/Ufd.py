@@ -9,8 +9,7 @@ from tkinter import (
     PhotoImage,
 )
 from tkinter.ttk import Treeview
-from os.path import dirname, isdir, isfile, split as path_split
-from posixpath import normpath
+from os.path import normpath, dirname, isdir, isfile, split as path_split
 from re import findall, sub, split as re_split
 from platform import system
 from subprocess import run
@@ -45,14 +44,18 @@ class Ufd:
 
         if not isinstance(title, str):
             raise TypeError("Argument title must be type string.")
-        else:
-            self.title = title
+
+        self.title = title
 
         if icon:
             if not isinstance(icon, str):
                 raise TypeError("Argument icon must be type string.")
-            else:
-                self.icon = icon
+
+            if not isfile(icon):
+                raise FileNotFoundError(f"File not found: {icon}")
+
+            self.icon = icon
+
         else: 
             self.icon = ""
 
@@ -191,22 +194,66 @@ class Ufd:
             self.left_pane,
             minsize=100,
             #Start off w/ the sash centered in the GUI:
-            width=(self.dialog.winfo_width() / 2) - ceil((self.paneview.cget("sashwidth") * 1.5)),
+            width=(self.dialog.winfo_width() / 2) - 
+            ceil((self.paneview.cget("sashwidth") * 1.5)),
         )
         self.paneview.paneconfigure(self.right_pane, minsize=100)
 
-        self.paneview.grid(row=0, column=0, sticky="nsew")
+        self.paneview.grid(
+            row=0,
+            column=0,
+            sticky="nsew"
+        )
 
-        self.treeview.grid(row=0, column=0, sticky="nsew")
-        self.treeview_y_scrollbar.grid(row=0, column=1, sticky="ns")
-        self.treeview_x_scrollbar.grid(row=1, column=0, columnspan=2, sticky="ew")
+        self.treeview.grid(
+            row=0,
+            column=0,
+            sticky="nsew"
+        )
+        self.treeview_y_scrollbar.grid(
+            row=0,
+            column=1,
+            sticky="ns"
+        )
+        self.treeview_x_scrollbar.grid(
+            row=1,
+            column=0,
+            columnspan=2,
+            sticky="ew"
+        )
 
-        self.file_list.grid(row=0, column=0, sticky="nsew")
-        self.file_list_y_scrollbar.grid(row=0, column=1, sticky="ns")
-        self.file_list_x_scrollbar.grid(row=1, column=0, columnspan=2, sticky="ew")
+        self.file_list.grid(
+            row=0,
+            column=0,
+            sticky="nsew"
+        )
+        self.file_list_y_scrollbar.grid(
+            row=0,
+            column=1,
+            sticky="ns"
+        )
+        self.file_list_x_scrollbar.grid(
+            row=1,
+            column=0,
+            columnspan=2,
+            sticky="ew"
+        )
 
-        self.cancel_button.grid(row=2, column=0, sticky="w", padx=10, pady=10)
-        self.submit_button.grid(row=2, column=0, columnspan=2, sticky="e", padx=10, pady=10)
+        self.cancel_button.grid(
+            row=2,
+            column=0,
+            sticky="w",
+            padx=10, 
+            pady=10
+        )
+        self.submit_button.grid(
+            row=2,
+            column=0,
+            columnspan=2,
+            sticky="e",
+            padx=10,
+            pady=10
+        )
         
         #Bindings, Protocols, & Misc:
         self.treeview.bind("<<TreeviewSelect>>", self.treeview_select)
@@ -266,6 +313,7 @@ class Ufd:
 
         return f"Ufd("\
         f"title=\"{self.title}\","\
+        f" icon=\"{self.icon}\","\
         f" show_hidden={self.show_hidden},"\
         f" include_files={self.include_files},"\
         f" tree_xscroll={self.treeview_xscroll},"\
@@ -274,6 +322,24 @@ class Ufd:
         f" select_files={self.select_files},"\
         f" unix_delimiter={self.unix_delimiter})"\
         f" @ {hex(id(self))}"
+
+
+    @staticmethod
+    def get_offset(tk_window):
+        """
+            Returns an appropriate offset for a given tkinter toplevel,
+            such that it always is created center screen on the primary display.
+        """
+
+        width_offset = int(
+            (tk_window.winfo_screenwidth() / 2) - (tk_window.winfo_width() / 2)
+        )
+
+        height_offset = int(
+            (tk_window.winfo_screenheight() / 2) - (tk_window.winfo_height() / 2)
+        )
+
+        return (width_offset, height_offset)
 
 
     @staticmethod
@@ -292,9 +358,7 @@ class Ufd:
             capture_output=True
         )
 
-        disks=findall("[A-Z]:", str(logicaldisks.stdout))
-        
-        return [disk for disk in disks]
+        return findall("[A-Z]:", str(logicaldisks.stdout))
 
 
     @staticmethod
@@ -426,8 +490,9 @@ class Ufd:
 
     def list_box_select(self, event=None):
         """
-            Dynamically refreshes the array of selected items in the
-            listbox (Callback for <<ListboxSelect>>).
+            Dynamically refresh the dialog selection with
+            what's selected in the listbox
+            (Callback for <<ListboxSelect>>).
         """
 
         if self.treeview.selection():
@@ -440,6 +505,12 @@ class Ufd:
 
 
     def treeview_select(self, event=None):
+        """
+            Dynamically refresh the dialog selection with
+            what's selected in the treeview
+            (Callback for <<TreeviewSelect>>).
+        """
+
         for i in self.file_list.curselection():
             self.file_list.selection_clear(i)
 
@@ -464,27 +535,9 @@ class Ufd:
         """
             Satisfies wait_window() in self.__call__() 
 
-            (Callback for <Button-1> on submit_button)
+            (Callback for <Button-1> on cancel_button)
             (Callback for protocol "WM_DELETE_WINDOW" on self.dialog)
         """
 
         self.dialog_selection.clear()
         self.dialog.destroy()
-
-
-    @staticmethod
-    def get_offset(tk_window):
-        """
-            Returns an appropriate offset for a given tkinter toplevel,
-            such that it always is created center screen on the primary display.
-        """
-
-        width_offset = int(
-            (tk_window.winfo_screenwidth() / 2) - (tk_window.winfo_width() / 2)
-        )
-
-        height_offset = int(
-            (tk_window.winfo_screenheight() / 2) - (tk_window.winfo_height() / 2)
-        )
-
-        return (width_offset, height_offset)
