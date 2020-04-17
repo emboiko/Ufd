@@ -12,7 +12,7 @@ int main(int argc, char *argv[]) {
 
 	while (getline(inFile, result)) results.push_back(result);
 	inFile.close();
-	remove("paths.txt");
+	std::remove("paths.txt");
 
 	for (std::string path : results) std::cout << path << "\n";
 

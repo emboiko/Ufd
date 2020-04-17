@@ -78,21 +78,21 @@ Ufd.exe is a Windows binary compiled with PyInstaller for x64 systems. (`dist/Uf
 #include <vector>
 
 int main(int argc, char *argv[]) {
-	system("C:/Programming/Python/Projects/Ufd/dist/Ufd/ufd.exe stdout=True > paths.txt");
-	std::ifstream inFile("paths.txt");
+    system("C:/Programming/Python/Projects/Ufd/dist/Ufd/ufd.exe stdout=True > paths.txt");
+    std::ifstream inFile("paths.txt");
 
-	std::vector<std::string> results;
-	std::string result;
+    std::vector<std::string> results;
+    std::string result;
 
-	while (getline(inFile, result)) results.push_back(result);
+    while (getline(inFile, result)) results.push_back(result);
 
-	inFile.close();
-    remove("paths.txt");
+    inFile.close();
+    std::remove("paths.txt");
 
-	for (std::string path : results) std::cout << path << "\n";
+    for (std::string path : results) std::cout << path << "\n";
 
-	std::cin.ignore();
-	return 0;
+    std::cin.ignore();
+    return 0;
 }
 ```
 
