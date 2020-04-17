@@ -46,6 +46,7 @@ def __init__(
     select_dirs:bool=True,
     select_files:bool=True,
     unix_delimiter:bool=True,
+    stdout:bool=False
 ):
 ```
 `title`             : str: Window title
@@ -66,7 +67,36 @@ def __init__(
 
 `unix_delimiter`    : bool: Return paths delimited with "/" or "\\"
 
+`stdout`            : bool: Print a newline delimited list of the dialog selection to stdout before returning (Useful if you aren't calling the dialog from a Python)
+
 Ufd still has several [boolean constructor parameters] options & behavioral tweaks in development that will optionally restrict / expand upon its behavior to match the context in which it is used. 
+
+## Using Ufd without Python
+Ufd.exe is a Windows binary compiled with PyInstaller for x64 systems. (`dist/Ufd/Ufd.exe`)
+
+```
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <vector>
+
+int main(int argc, char *argv[]) {
+	system("C:/Programming/Python/Projects/Ufd/dist/Ufd/ufd.exe stdout=True > paths.txt");
+	std::ifstream inFile("paths.txt");
+
+	std::vector<std::string> results;
+	std::string result;
+
+	while (getline(inFile, result)) results.push_back(result);
+
+	inFile.close(); //Maybe delete the file, too
+
+	for (std::string path : results) std::cout << path << "\n";
+
+	std::cin.ignore();
+	return 0;
+}
+```
 
 ## Why should I use Ufd?
 - It's easy
@@ -96,4 +126,4 @@ result = dialog()
 - Drill through the treeview with `<Doubleclick>`, `<Enter>`, and/or ArrowKeys.
 - Treeview supports single-select via `<Doubleclick>` or the submit button.
 - Navigate the listbox on the right with the mouse or arrow keys. Multiselect is supported with `<Shift>` (span) & `<Ctrl>` (individuals), or by clicking + dragging the mouse. Select all with `<Ctrl+A>` as expected. Confirm selection in the listbox with `<Enter>` or the submit button.
-- Cancelling via the cancel button or the window manager will both return an empty list from the dialog.
+- Cancelling via `<Ctrl-w>`, the cancel button, or the window manager will both return an empty list from the dialog.

@@ -14,6 +14,7 @@ from re import findall, sub, split as re_split
 from platform import system
 from subprocess import run
 from math import ceil
+from collections import deque
 
 
 class Ufd:
@@ -35,6 +36,7 @@ class Ufd:
         select_dirs:bool=True,
         select_files:bool=True,
         unix_delimiter:bool=True,
+        stdout:bool=False
     ):
 
         """
@@ -63,30 +65,41 @@ class Ufd:
             self.show_hidden = True
         else:
             self.show_hidden = False
+
         if include_files:
             self.include_files = True
         else:
             self.include_files = False
+
         if tree_xscroll:
             self.treeview_xscroll = True
         else:
             self.treeview_xscroll = False
+
         if multiselect:
             self.multiselect = True
         else:
             self.multiselect = False
+
         if select_dirs:
             self.select_dirs = True
         else:
             self.select_dirs = False
+
         if select_files:
             self.select_files = True
         else:
             self.select_files = False
+
         if unix_delimiter:
             self.unix_delimiter = True
         else:
             self.unix_delimiter = False
+
+        if stdout:
+            self.stdout = True
+        else:
+            self.stdout = False
 
         # Tkinter:
         self.dialog = Tk()
@@ -131,8 +144,8 @@ class Ufd:
 
         self.treeview_x_scrollbar=Scrollbar(self.left_pane, orient="horizontal")
         self.treeview_y_scrollbar=Scrollbar(self.left_pane, orient="vertical")
-        self.file_list_x_scrollbar=Scrollbar(self.right_pane, orient="horizontal")
-        self.file_list_y_scrollbar=Scrollbar(self.right_pane, orient="vertical")
+        self.list_box_x_scrollbar=Scrollbar(self.right_pane, orient="horizontal")
+        self.list_box_y_scrollbar=Scrollbar(self.right_pane, orient="vertical")
         
         self.treeview=Treeview(
             self.left_pane,
@@ -149,10 +162,10 @@ class Ufd:
         if self.treeview_xscroll:
             self.treeview.column("#0", minwidth=1000)
 
-        self.file_list=Listbox(
+        self.list_box=Listbox(
             self.right_pane,
-            xscrollcommand=self.file_list_x_scrollbar.set,
-            yscrollcommand=self.file_list_y_scrollbar.set,
+            xscrollcommand=self.list_box_x_scrollbar.set,
+            yscrollcommand=self.list_box_y_scrollbar.set,
             width=34,
             highlightthickness=0,
             bd=2,
@@ -160,9 +173,9 @@ class Ufd:
         )
 
         if self.multiselect:
-            self.file_list.config(selectmode="extended")
+            self.list_box.config(selectmode="extended")
         else:
-            self.file_list.config(selectmode="browse")
+            self.list_box.config(selectmode="browse")
 
         self.cancel_button = Button(
             self.left_pane,
@@ -178,8 +191,8 @@ class Ufd:
 
         self.treeview_x_scrollbar.config(command=self.treeview.xview)
         self.treeview_y_scrollbar.config(command=self.treeview.yview)
-        self.file_list_x_scrollbar.config(command=self.file_list.xview)
-        self.file_list_y_scrollbar.config(command=self.file_list.yview)
+        self.list_box_x_scrollbar.config(command=self.list_box.xview)
+        self.list_box_y_scrollbar.config(command=self.list_box.yview)
         
         #Layout:
         self.dialog.rowconfigure(0, weight=1)
@@ -222,17 +235,17 @@ class Ufd:
             sticky="ew"
         )
 
-        self.file_list.grid(
+        self.list_box.grid(
             row=0,
             column=0,
             sticky="nsew"
         )
-        self.file_list_y_scrollbar.grid(
+        self.list_box_y_scrollbar.grid(
             row=0,
             column=1,
             sticky="ns"
         )
-        self.file_list_x_scrollbar.grid(
+        self.list_box_x_scrollbar.grid(
             row=1,
             column=0,
             columnspan=2,
@@ -256,16 +269,17 @@ class Ufd:
         )
         
         #Bindings, Protocols, & Misc:
+        self.dialog.bind("<Control-w>", self.cancel)
         self.treeview.bind("<<TreeviewSelect>>", self.treeview_select)
         self.treeview.bind("<Double-Button-1>", self.dialog_populate)
         self.treeview.bind("<Return>", self.dialog_populate)
         self.treeview.bind("<Right>", self.dialog_populate)
-        self.file_list.bind("<<ListboxSelect>>", self.list_box_select)
-        self.file_list.bind("<Return>", self.submit)
+        self.list_box.bind("<<ListboxSelect>>", self.list_box_select)
+        self.list_box.bind("<Return>", self.submit)
         self.dialog.protocol("WM_DELETE_WINDOW", self.cancel)
 
-        self.dialog_selection = []
-        self.selection_paths = []
+        self.dialog_selection = deque()
+        self.selection_paths = deque()
 
         for disk in self.get_disks():
             self.treeview.insert(
@@ -290,11 +304,17 @@ class Ufd:
 
         self.dialog.wait_window()
 
-        if not self.unix_delimiter:
-            for i, path in enumerate(self.dialog_selection):
+        for i, path in enumerate(self.dialog_selection):
+            if self.unix_delimiter:
+                self.dialog_selection[i] = sub("\\\\", "/", path)
+            else:
                 self.dialog_selection[i] = sub("/", "\\\\", path)
 
-        return self.dialog_selection
+
+        if self.stdout:
+            [print(item) for item in self.dialog_selection]
+
+        return list(self.dialog_selection)
 
 
     def __str__(self):
@@ -321,6 +341,7 @@ class Ufd:
         f" select_dirs={self.select_dirs},"\
         f" select_files={self.select_files},"\
         f" unix_delimiter={self.unix_delimiter})"\
+        f" stdout={self.stdout})"\
         f" @ {hex(id(self))}"
 
 
@@ -413,7 +434,7 @@ class Ufd:
         item_text = self.treeview.item(item)["text"]
         parent = self.treeview.parent(item)
         path = ""
-        parents = []
+        parents = deque()
 
         while parent:
             parents.append(self.treeview.item(parent)["text"] + "/")
@@ -439,7 +460,7 @@ class Ufd:
         existing_children = self.treeview.get_children(self.treeview.focus())
         [self.treeview.delete(child) for child in existing_children]
 
-        self.file_list.delete(0, "end")
+        self.list_box.delete(0, "end")
         self.selection_paths.clear()
 
         focus_item = self.treeview.focus()
@@ -461,7 +482,7 @@ class Ufd:
                 )
 
                 if self.select_dirs:
-                    self.file_list.insert("end", child)
+                    self.list_box.insert("end", child)
                     self.selection_paths.append(path+child)
 
             elif isfile(path+child):
@@ -475,17 +496,17 @@ class Ufd:
                     )
 
                 if self.select_files:
-                    self.file_list.insert("end", child)
-                    self.file_list.itemconfig("end", {"bg":"#EAEAEA"})
+                    self.list_box.insert("end", child)
+                    self.list_box.itemconfig("end", {"bg":"#EAEAEA"})
                     self.selection_paths.append(path+child)
 
         if isfile(normpath(path)):
             (head, tail) = path_split(normpath(path))
             head = sub("\\\\", "/", head)
             
-            self.file_list.insert("end", tail)
+            self.list_box.insert("end", tail)
             self.selection_paths.append(head + "/" + tail)
-            self.file_list.itemconfig("end", {"bg":"#EAEAEA"})
+            self.list_box.itemconfig("end", {"bg":"#EAEAEA"})
 
 
     def list_box_select(self, event=None):
@@ -500,7 +521,7 @@ class Ufd:
 
         self.dialog_selection.clear()
         
-        for i in self.file_list.curselection():
+        for i in self.list_box.curselection():
             self.dialog_selection.append(self.selection_paths[i])
 
 
@@ -511,8 +532,8 @@ class Ufd:
             (Callback for <<TreeviewSelect>>).
         """
 
-        for i in self.file_list.curselection():
-            self.file_list.selection_clear(i)
+        for i in self.list_box.curselection():
+            self.list_box.selection_clear(i)
 
         self.dialog_selection.clear()
 
