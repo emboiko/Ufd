@@ -41,7 +41,6 @@ def __init__(
     icon:str="",
     show_hidden:bool=False,
     include_files:bool=True,
-    tree_xscroll:bool=False,
     multiselect:bool=True,
     select_dirs:bool=True,
     select_files:bool=True,
@@ -56,8 +55,6 @@ def __init__(
 `show_hidden`       : bool: Include hidden file(s) or folder(s) in treeview
 
 `include_files`     : bool: Include file(s) in treeview
-
-`tree_xscroll`      : bool: Enable a hardcoded horizontal scroll for treeview 
 
 `multiselect`       : bool: File-list multiselect support, returns a list either way
 
@@ -89,7 +86,8 @@ int main(int argc, char *argv[]) {
 
 	while (getline(inFile, result)) results.push_back(result);
 
-	inFile.close(); //Maybe delete the file, too
+	inFile.close();
+    remove("paths.txt");
 
 	for (std::string path : results) std::cout << path << "\n";
 

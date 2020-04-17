@@ -7,7 +7,6 @@ arguments = {
     "icon":"",
     "show_hidden":False,
     "include_files":True,
-    "tree_xscroll":False,
     "multiselect":True,
     "select_dirs":True,
     "select_files":True,
@@ -29,9 +28,6 @@ for arg in args:
 
     if arg.startswith("include_files="):
         arguments["include_files"] = strtobool(arg[14:])
-
-    if arg.startswith("tree_xscroll="):
-        arguments["tree_xscroll"] = strtobool(arg[13:])
 
     if arg.startswith("multiselect="):
         arguments["multiselect"] = strtobool(arg[12:])

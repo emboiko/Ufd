@@ -31,7 +31,6 @@ class Ufd:
         icon:str="",
         show_hidden:bool=False,
         include_files:bool=True,
-        tree_xscroll:bool=False,
         multiselect:bool=True,
         select_dirs:bool=True,
         select_files:bool=True,
@@ -70,11 +69,6 @@ class Ufd:
             self.include_files = True
         else:
             self.include_files = False
-
-        if tree_xscroll:
-            self.treeview_xscroll = True
-        else:
-            self.treeview_xscroll = False
 
         if multiselect:
             self.multiselect = True
@@ -154,13 +148,6 @@ class Ufd:
             show="tree",
             selectmode="browse"
         )
-
-        # Tkinter x_scroll is broken for treeview
-        # https://stackoverflow.com/questions/49715456
-        # https://stackoverflow.com/questions/14359906
-        # Lousy bandaid:
-        if self.treeview_xscroll:
-            self.treeview.column("#0", minwidth=1000)
 
         self.list_box=Listbox(
             self.right_pane,
@@ -336,7 +323,6 @@ class Ufd:
         f" icon=\"{self.icon}\","\
         f" show_hidden={self.show_hidden},"\
         f" include_files={self.include_files},"\
-        f" tree_xscroll={self.treeview_xscroll},"\
         f" multiselect={self.multiselect},"\
         f" select_dirs={self.select_dirs},"\
         f" select_files={self.select_files},"\
@@ -453,9 +439,10 @@ class Ufd:
             and keeps track of the full paths corresponding to each
             item in the listbox
         """
-
         if not self.treeview.focus():
             return
+
+        self.treeview.column("#0", width=1000)
 
         existing_children = self.treeview.get_children(self.treeview.focus())
         [self.treeview.delete(child) for child in existing_children]
