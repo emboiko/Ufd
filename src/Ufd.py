@@ -524,9 +524,13 @@ class Ufd:
 
         self.dialog_selection.clear()
 
-        self.dialog_selection.append(
-            normpath(self.climb(self.treeview.focus()))
-        )
+        item = normpath(self.climb(self.treeview.focus()))
+
+        if isdir(item) and self.select_dirs:
+            self.dialog_selection.append(item)
+
+        if isfile(item) and self.select_files:
+            self.dialog_selection.append(item)
 
 
     def submit(self, event=None):
