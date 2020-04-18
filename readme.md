@@ -125,3 +125,10 @@ result = dialog()
 - Treeview supports single-select via `<Doubleclick>` or the submit button.
 - Navigate the listbox on the right with the mouse or arrow keys. Multiselect is supported with `<Shift>` (span) & `<Ctrl>` (individuals), or by clicking + dragging the mouse. Select all with `<Ctrl+A>` as expected. Confirm selection in the listbox with `<Enter>` or the submit button.
 - Cancelling via `<Ctrl-w>`, the cancel button, or the window manager will both return an empty list from the dialog.
+
+---
+##### Todo
+- Tree only mode
+- Treeview x_scroll 
+- Listbox Filter
+- Listbox Navigation
