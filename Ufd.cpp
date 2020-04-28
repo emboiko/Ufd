@@ -4,7 +4,7 @@
 #include <vector>
 
 int main(int argc, char *argv[]) {
-	system("C:/Programming/Python/Projects/Ufd/dist/Ufd/ufd.exe stdout=True > paths.txt");
+	system("/path/to/ufd.exe stdout=True > paths.txt");
 	std::ifstream inFile("paths.txt");
 
 	std::vector<std::string> results;

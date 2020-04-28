@@ -1,0 +1,4 @@
+include src/Ufd/*.gif
+include src/Ufd/*.ico
+
+global-exclude dist_win64/*

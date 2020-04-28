@@ -7,7 +7,7 @@
 
 ## Install & Get Started:
 
-`pip install Ufd`
+`pip install Ufd --upgrade`
 
 ###### or
 
@@ -19,7 +19,7 @@ Download the .zip [here](https://github.com/emboiko/Ufd/archive/master.zip)
 
 ### Import:
 
-`from Ufd import Ufd`
+`from Ufd.Ufd import Ufd`
 
 ### Construct:
 ```
@@ -86,7 +86,7 @@ Ufd.exe is a Windows binary compiled with PyInstaller for x64 systems. (`dist_wi
 #include <vector>
 
 int main(int argc, char *argv[]) {
-    system("C:/Programming/Python/Projects/Ufd/dist/Ufd/ufd.exe stdout=True > paths.txt");
+    system("/path/to/ufd.exe stdout=True > paths.txt");
     std::ifstream inFile("paths.txt");
 
     std::vector<std::string> results;
