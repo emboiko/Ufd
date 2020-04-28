@@ -1,6 +1,6 @@
 from distutils.util import strtobool
 from sys import argv
-from Ufd import Ufd
+from src.Ufd import Ufd
 
 arguments = {
     "title":"Universal File Dialog",

@@ -7,6 +7,7 @@ from tkinter import (
     Label,
     Scrollbar,
     PhotoImage,
+    messagebox
 )
 from tkinter.ttk import Treeview
 from os.path import normpath, dirname, isdir, isfile, split as path_split
@@ -525,20 +526,33 @@ class Ufd:
         self.dialog_selection.clear()
 
         item = normpath(self.climb(self.treeview.focus()))
-
-        if isdir(item) and self.select_dirs:
-            self.dialog_selection.append(item)
-
-        if isfile(item) and self.select_files:
-            self.dialog_selection.append(item)
+        self.dialog_selection.append(item)
 
 
     def submit(self, event=None):
         """
-            Satisfies wait_window() in self.__call__()
+            Satisfies wait_window() in self.__call__() and validates selection
 
             (Callback for <Return>, <Button-1> on file_list, submit_button)
         """
+
+        if self.select_dirs == False:
+            for item in self.dialog_selection:
+                if isdir(item):
+                    messagebox.showwarning(
+                        "Error - Invalid Selection",
+                        "Unable to select directory. Please select a file(s)."
+                    )
+                    return
+
+        if self.select_files == False:
+            for item in self.dialog_selection:
+                if isfile(item):
+                    messagebox.showwarning(
+                        "Error - Invalid Selection",
+                        "Unable to select file. Please select a folder(s)"
+                    )
+                    return
         
         self.dialog.destroy()
 

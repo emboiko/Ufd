@@ -7,19 +7,27 @@
 
 ## Install & Get Started:
 
-`git clone https://github.com/emboiko/Ufd.git` (or grab the .zip)
+`pip install Ufd`
 
-Import:
+###### or
+
+`git clone https://github.com/emboiko/Ufd.git` 
+
+###### or
+
+Download the .zip [here](https://github.com/emboiko/Ufd/archive/master.zip)
+
+### Import:
 
 `from Ufd import Ufd`
 
-Construct:
+### Construct:
 ```
 dialog = Ufd(**Kwargs)
 result = dialog()
 ```
 
-or specify a bunch of options:
+or specify a bunch of **options**:
 
 ```
 dialog = Ufd(
@@ -69,7 +77,7 @@ def __init__(
 Ufd still has several [boolean constructor parameters] options & behavioral tweaks in development that will optionally restrict / expand upon its behavior to match the context in which it is used. 
 
 ## Using Ufd without Python
-Ufd.exe is a Windows binary compiled with PyInstaller for x64 systems. (`dist/Ufd/Ufd.exe`)
+Ufd.exe is a Windows binary compiled with PyInstaller for x64 systems. (`dist_win64/Ufd/Ufd.exe`)
 
 ```
 #include <iostream>
