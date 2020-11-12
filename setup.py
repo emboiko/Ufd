@@ -9,7 +9,7 @@ setup(
     url="https://github.com/emboiko/Ufd",
     author="Emboiko",
     author_email="ed@emboiko.com",
-    version="0.1.5",
+    version="1.0.0",
     keywords="single instance",
     description="Unopinionated, minimalist, reusable, slightly configurable, general-purpose file-dialog.",
     py_modules=["Ufd"],
@@ -21,6 +21,8 @@ setup(
     classifiers=[
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
         "License :: OSI Approved :: MIT License",
         "Operating System :: Microsoft :: Windows"
     ],

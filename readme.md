@@ -136,7 +136,8 @@ result = dialog()
 
 ---
 ##### Todo
-- Tree only mode
-- Treeview x_scroll 
+- Treeview only mode / folderbrowser mode
+- Treeview bugged x_scroll 
+- Treeview bugged border
 - Listbox Filter
 - Listbox Navigation

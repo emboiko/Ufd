@@ -1,15 +1,13 @@
 from tkinter import (
     Tk,
-    Toplevel,
     PanedWindow,
     Listbox,
     Button,
-    Label,
     Scrollbar,
     PhotoImage,
     messagebox
 )
-from tkinter.ttk import Treeview
+from tkinter.ttk import Treeview, Style
 from os.path import normpath, dirname, isdir, isfile, split as path_split
 from re import findall, sub, split as re_split
 from platform import system
@@ -142,13 +140,17 @@ class Ufd:
         self.list_box_x_scrollbar=Scrollbar(self.right_pane, orient="horizontal")
         self.list_box_y_scrollbar=Scrollbar(self.right_pane, orient="vertical")
         
+        # tstyle = Style().configure(".", )
+
         self.treeview=Treeview(
             self.left_pane,
             xscrollcommand=self.treeview_x_scrollbar.set,
             yscrollcommand=self.treeview_y_scrollbar.set,
             show="tree",
-            selectmode="browse"
+            selectmode="browse",
+            # style=tstyle
         )
+
 
         self.list_box=Listbox(
             self.right_pane,
@@ -503,9 +505,6 @@ class Ufd:
             what's selected in the listbox
             (Callback for <<ListboxSelect>>).
         """
-
-        if self.treeview.selection():
-            self.treeview.selection_remove(self.treeview.selection()[0])
 
         self.dialog_selection.clear()
         

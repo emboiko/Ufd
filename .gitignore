@@ -111,3 +111,6 @@ dmypy.json
 
 .vscode
 test.py
+Ufd_build/
+build_win64/
+build.bat
